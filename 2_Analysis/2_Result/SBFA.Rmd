@@ -10,6 +10,7 @@ library(BayesFactor)
 library(tidyverse)
 library(here)
 set.seed(123)
+options(mc.cores = parallel::detectCores())
 ```
 
 ```{r}
@@ -30,16 +31,16 @@ bayesfactors <- BayesFactor::generalTestBF(
 
 
 ```{r}
-bayesfactors[120]
+bf.exinx <- bayesfactors[120]/bayesfactors[128]
 ```
 
 ```{r}
-bayesfactors[127]
+bf.inx <- bayesfactors[127]/bayesfactors[128]
 ```
 
 
 ```{r}
-(bf <- bayesfactors[127]/bayesfactors[120])
+(bf <- bf.inx/bf.exinx)
 ```
 
 
