@@ -1,0 +1,52 @@
+---
+title: "Seuqntial Bayes Factor Analysis"
+author: "郑元瑞"
+date: "2023-01-22"
+output: html_document
+---
+
+```{r}
+library(BayesFactor)
+library(tidyverse)
+library(here)
+set.seed(123)
+```
+
+```{r}
+df <- read_csv(here("1_Data", "2_Postpro_data", "Exp2_RT_Agg.csv"))
+```
+
+```{r}
+df$subj_idx <- as.factor(df$subj_idx)
+
+bayesfactors <- BayesFactor::generalTestBF(
+    rt_m ~ valence*matchness*condition*subj_idx - subj_idx:valence:matchness:condition,
+    data = data.frame(df), 
+    whichRandom = "subj_idx",
+    neverExclude = "subj_idx", 
+    whichModels = "all")
+```
+
+
+
+```{r}
+bayesfactors[120]
+```
+
+```{r}
+bayesfactors[127]
+```
+
+
+```{r}
+(bf <- bayesfactors[127]/bayesfactors[120])
+```
+
+
+
+
+
+
+
+
+

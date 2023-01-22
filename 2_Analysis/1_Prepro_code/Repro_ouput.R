@@ -8,9 +8,6 @@ library(here)
 library(tidyverse)
 
 here::here()
-
-source(here::here("2_Analysis", "1_Prepro_code", "functions.R"))
-
 ##### set the path
 recent_file <- here::here("1_Data", "2_Postpro_data")
 
