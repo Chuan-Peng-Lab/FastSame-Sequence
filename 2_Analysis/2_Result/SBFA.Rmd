@@ -6,15 +6,25 @@ output: html_document
 ---
 
 ```{r}
-library(BayesFactor)
+library(tidyverse) # data wrangling, plotting
+library(brms)      # Bayesian analysis
+library(rstan)     # Bayesian analysis
 library(tidyverse)
 library(here)
+library(hypr)
+library(bridgesampling)
+library(BayesFactor)
+library(here)
+#devtools::install_github("RobinHankin/Brobdingnag")
+#update.packages("dbplyr")
+#installed.packages()[names(sessionInfo()$otherPkgs), "Version"]
 set.seed(123)
 options(mc.cores = parallel::detectCores())
 ```
 
 ```{r}
 df <- read_csv(here("1_Data", "2_Postpro_data", "Exp2_RT_Agg.csv"))
+dat <- read_csv((here("1_Data", "2_Postpro_data", "Exp2_RT.csv")))
 ```
 
 ```{r}
@@ -44,6 +54,87 @@ bf.inx <- bayesfactors[127]/bayesfactors[128]
 ```
 
 
+```{r}
+dat <- read_csv("/Users/zhengyuanrui/FastSame-Sequence/1_Data/2_Postpro_data/Exp2_RT.csv")
+
+df_bf <- dat %>% 
+  select(subj_idx, exp, valence, condition, matchness, ACC, rt) %>% 
+  mutate(across(subj_idx:matchness, as.factor))
+
+head(df_bf)
+
+
+
+v <- hypr(
+  bad_good = Bad ~ Good, 
+  neu_good = Neutral ~ Good, 
+  levels = c("Bad", "Good", "Neutral")
+)
+
+contrasts(df_bf$valence) <- contr.hypothesis(v)
+
+m <- hypr(
+  m_mis = match ~ mismatch, 
+  levels = c("match", "mismatch")
+)
+
+contrasts(df_bf$matchness) <- contr.hypothesis(m)
+
+# levels(df_bf$shape)
+
+# s <- hypr(
+#   word_sim= circular ~ square,  
+#   image_sim = square ~triangle, 
+#   levels = c("circular", "square", "triangle")
+# )
+
+
+# contrasts(df_bf$shape) <- contr.hypothesis(s)
+
+
+
+
+###############################
+
+bf_result <- data.frame(effect = "inx", N = NA, BF = NA)
+
+subj <- sort(unique(df_bf$subj_idx))#对被试编号进行排序
+
+Ns <- c(seq(10, 20, by = 10))
+
+for (i in Ns) {
+  data <- subset(df_bf, subj_idx %in% head(subj, i))
+  
+  message(length(unique(data$subj_idx)), " subjects")
+
+  model1 <- brm(rt ~ valence * matchness * condition + (valence * matchness * condition|subj_idx),
+                data = data,
+                family = gaussian(),
+                warmup = 1000, iter = 50000, chains = 4,
+                control = list(adapt_delta = .99, max_treedepth = 12),  
+                save_pars = save_pars(all = TRUE))
+
+  gc()
+
+  summary(model1)
+
+  model2 <- brm(rt ~ valence + matchness + condition + valence:matchness + valence:condition + matchness:condition + (valence * matchness * condition|subj_idx),
+                data = data,
+                family = gaussian(),
+                warmup = 1000, iter = 50000, chains = 4,
+                control = list(adapt_delta = .99, max_treedepth = 12),  
+                save_pars = save_pars(all = TRUE))
+
+  summary(model2)
+
+  (BF = bayes_factor(model1, model2))
+
+  tmp <- data.frame(effect = "inx", N = i, BF = BF[[1]])
+  bf_result <- rbind(bf_result, tmp)
+  print(bf_result)
+}
+
+```
 
 
 
