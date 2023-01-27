@@ -55,8 +55,6 @@ bf.inx <- bayesfactors[127]/bayesfactors[128]
 
 
 ```{r}
-dat <- read_csv("/Users/zhengyuanrui/FastSame-Sequence/1_Data/2_Postpro_data/Exp2_RT.csv")
-
 df_bf <- dat %>% 
   select(subj_idx, exp, valence, condition, matchness, ACC, rt) %>% 
   mutate(across(subj_idx:matchness, as.factor))
@@ -100,7 +98,7 @@ bf_result <- data.frame(effect = "inx", N = NA, BF = NA)
 
 subj <- sort(unique(df_bf$subj_idx))#对被试编号进行排序
 
-Ns <- c(seq(10, 20, by = 10))
+Ns <- c(20)
 
 for (i in Ns) {
   data <- subset(df_bf, subj_idx %in% head(subj, i))
@@ -137,8 +135,9 @@ for (i in Ns) {
 ```
 
 
-
-
+```{r}
+bf_result
+```
 
 
 
