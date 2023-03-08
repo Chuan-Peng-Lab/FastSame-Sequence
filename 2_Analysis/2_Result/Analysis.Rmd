@@ -87,7 +87,7 @@ df.agg2$subj_idx <- as.factor(df.agg2$subj_idx)
 head(df.agg2)
 ```
 
-transform the long data to wide
+transform the long data to wide for analysing data in JASP
 ```{r}
 df.agg1_wide <- df.agg1 %>%
   tidyr::pivot_wider(
@@ -206,7 +206,9 @@ df.agg2 <- df.agg2 %>%
 ### Using aggregated data and RMANOVA to calculate BF
 ```{r}
 df.agg1$subj_idx <- as.factor(df.agg1$subj_idx)
+
 subjects1 <- sort(unique(df.agg1$subj_idx))
+
 subjects1
 
 stages <- seq(20, 30, by = 10)
@@ -275,6 +277,8 @@ for (i in stages) {
 
 bfdf1 <- na.omit(bfdf1)
 
+readr::write_csv(bfdf1, paste(here::here("2_Analysis", "2_Result"), "BF_exp1.csv", sep = "/"))
+
 bfdf1$stage <- as.factor(bfdf1$stage)
 
 bfdf1 %>% 
@@ -290,7 +294,9 @@ bfdf1 %>%
 
 ```{r}
 df.agg2$subj_idx <- as.factor(df.agg2$subj_idx)
+
 subjects2 <- sort(unique(df.agg2$subj_idx))
+
 subjects2
 
 stages <- seq(20, 30, by = 10)
@@ -358,6 +364,8 @@ for (i in stages) {
 ```{r}
 
 bfdf2 <- na.omit(bfdf2)
+
+readr::write_csv(bfdf2, paste(here::here("2_Analysis", "2_Result"), "BF_exp2.csv", sep = "/"))
 
 bfdf2$stage <- as.factor(bfdf2$stage)
 
