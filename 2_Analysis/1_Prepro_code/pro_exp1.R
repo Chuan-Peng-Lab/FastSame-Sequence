@@ -64,9 +64,12 @@ for (i in seq_along(filenames)) {
           subj_idx %% 2 == 0 & correct_response == "j" ~ "mismatch"
         )
     )
+  data[[i]] <- data[[i]] %>% 
+    dplyr::group_by(subj_idx, condition) %>% 
+    dplyr::mutate(trial_id = dplyr::row_number()) %>% 
+    dplyr::ungroup()
 }
 
 df_exp1 <- do.call(rbind, data)
-
 outpath1 <- here::here("1_Data", "2_Postpro_data")
 # readr::write_csv(df_exp1, paste(outpath1, "Exp1_postpro.csv", sep = "/"))

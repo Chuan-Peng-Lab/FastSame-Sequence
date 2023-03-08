@@ -232,11 +232,11 @@ for (i in 1:nrow(exp2.V.sdt_w)) {
 
 # calculate the d prime for each condition
 exp1.V.sdt_w <- exp1.V.sdt_w %>%
-  mutate(dprime = qnorm(hitR) - qnorm(faR))
+  dplyr::mutate(dprime = qnorm(hitR) - qnorm(faR))
 
 
 exp2.V.sdt_w <- exp2.V.sdt_w %>%
-  mutate(dprime = qnorm(hitR) - qnorm(faR))
+  dplyr::mutate(dprime = qnorm(hitR) - qnorm(faR))
 
 ######### write the dprime data to csv
 # readr::write_csv(exp1.V.sdt_w, paste(outpath_v, "Exp1_dprime.csv", sep = "/"))
@@ -247,10 +247,10 @@ exp2.V.sdt_w <- exp2.V.sdt_w %>%
 ####################################
 
 df.exp1_RT <- dat_exp1.V %>%
-  filter(ACC == 1)
+  dplyr::filter(ACC == 1)
 
 df.exp2_RT <- dat_exp2.V %>%
-  filter(ACC == 1)
+  dplyr::filter(ACC == 1)
 ######### write the unaggregated data to csv
 # readr::write_csv(df.exp1_RT, paste(outpath_v, "Exp1_RT.csv", sep = "/"))
 # readr::write_csv(df.exp2_RT, paste(outpath_v, "Exp2_RT.csv", sep = "/"))

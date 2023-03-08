@@ -63,6 +63,10 @@ for (i in seq_along(filenames)) {
           subj_idx %% 2 == 0 & correct_response == "j" ~ "mismatch"
         )
     )
+  data[[i]] <- data[[i]] %>% 
+    dplyr::group_by(subj_idx, condition) %>% 
+    dplyr::mutate(trial_id = dplyr::row_number()) %>% 
+    dplyr::ungroup()
 }
 
 

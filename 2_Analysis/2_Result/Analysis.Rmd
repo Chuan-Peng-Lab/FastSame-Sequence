@@ -1,0 +1,486 @@
+---
+title: "Seuqntial Bayes Factor Analysis"
+author: "郑元瑞"
+date: "2023-01-22"
+output: html_document
+---
+
+## Import packages and data
+
+```{r import packages and info, message=FALSE}
+library(tidyverse) # data wrangling, plotting
+library(brms) # Bayesian analysis
+library(rstan) # Bayesian analysis
+library(tidyverse)
+library(here)
+library(hypr)
+library(bridgesampling)
+library(BayesFactor)
+library(here)
+# devtools::install_github("RobinHankin/Brobdingnag")
+# update.packages("dbplyr")
+set.seed(123)
+options(mc.cores = parallel::detectCores())
+installed.packages()[names(sessionInfo()$otherPkgs), "Version"]
+R.version$version.string
+```
+
+### Import four dataset and preprocessing
+
+-   df.agg1 is aggregated data for experiment 1
+-   df.agg2 is aggregated data for experiment 2
+-   dat1 is the reaction time data without aggregating for experiment 1
+-   dat2 is the reaction time data without aggregating for experiment 2
+
+```{r import data, message=FALSE}
+df.agg1 <- read_csv(here("1_Data", "2_Postpro_data", "Exp1_RT_Agg.csv"))
+dat1 <- read_csv((here("1_Data", "2_Postpro_data", "Exp1_RT.csv")))
+df.agg2 <- read_csv(here("1_Data", "2_Postpro_data", "Exp2_RT_Agg.csv"))
+dat1 <- read_csv((here("1_Data", "2_Postpro_data", "Exp1_RT.csv")))
+dat2 <- read_csv((here("1_Data", "2_Postpro_data", "Exp2_RT.csv")))
+```
+
+### Data Preprocessing
+
+rename the df.agg1 and selected the needed columns
+
+for the **seq** variable
+
+-   The I represents image_first in **seq** variable, which means in the experiment, the image is presented before the text.
+
+-   The W represents word_first in **seq** variable, which means in the experiment, the text is presented before the image
+
+-   The S represents simultaneous in **seq** variable, which means in the experiment, the text and the image are present simultaneously
+
+#### Aggregated data
+```{r}
+df.agg1 <- df.agg1 %>%#rename the columns
+  dplyr::rename(
+    "seq" = condition,
+    "rt" = rt_m
+  ) %>%
+  dplyr::mutate(seq = dplyr::case_when(
+    seq == "image_first" ~ "I",
+    seq == "word_first" ~ "W",
+    seq == "simultaneous" ~ "S"
+  )) %>%
+  dplyr::select(subj_idx, valence, matchness, seq, rt) %>% 
+  dplyr::mutate(exp = "exp1")
+df.agg1$subj_idx <- as.factor(df.agg1$subj_idx)
+head(df.agg1)
+```
+
+```{r}
+df.agg2 <- df.agg2 %>%
+  dplyr::rename(
+    "seq" = condition,
+    "rt" = rt_m
+  ) %>%
+  dplyr::mutate(seq = dplyr::case_when(
+    seq == "image_first" ~ "I",
+    seq == "word_first" ~ "W",
+    seq == "simultaneous" ~ "S"
+  )) %>%
+  dplyr::select(subj_idx, valence, matchness, seq, rt) %>% 
+  dplyr::mutate(exp = "exp2")
+df.agg2$subj_idx <- as.factor(df.agg2$subj_idx)
+head(df.agg2)
+```
+
+transform the long data to wide
+```{r}
+df.agg1_wide <- df.agg1 %>%
+  tidyr::pivot_wider(
+    id_cols = "subj_idx",
+    names_from = c(
+      valence, matchness,
+      seq
+    ),
+    values_from = rt
+  )
+df.agg2_wide <- df.agg2 %>%
+  tidyr::pivot_wider(
+    id_cols = "subj_idx",
+    names_from = c(
+      valence, matchness,
+      seq
+    ),
+    values_from = rt
+  )
+outpath_v <- here::here("1_Data", "2_Postpro_data")
+# readr::write_csv(df.agg2_wide, paste(outpath_v, "Exp2_RT_agg_wide.csv", sep = "/"))
+# readr::write_csv(df.agg1_wide, paste(outpath_v, "Exp1_RT_agg_wide.csv", sep = "/"))
+```
+
+#### unaggregated data
+```{r}
+df.unagg1 <- dat1 %>%
+  dplyr::rename("seq" = condition) %>%
+  dplyr::mutate(seq = dplyr::case_when(
+    seq == "image_first" ~ "I",
+    seq == "word_first" ~ "W",
+    seq == "simultaneous" ~ "S"
+  ))
+```
+
+```{r}
+df.unagg2 <- dat2 %>%
+  dplyr::rename("seq" = condition) %>%
+  dplyr::mutate(seq = dplyr::case_when(
+    seq == "image_first" ~ "I",
+    seq == "word_first" ~ "W",
+    seq == "simultaneous" ~ "S"
+  ))
+```
+
+## Basic information about the dependent variable
+### the hist plot for aggregated data
+
+```{r}
+df.agg1 %>% 
+  ggplot(aes(x = rt)) +
+  geom_histogram()
+```
+```{r}
+df.agg1 %>% 
+  ggplot(aes(x = log(rt))) +
+  geom_histogram()
+```
+
+```{r}
+df.agg2 %>% 
+  ggplot(aes(x = rt)) +
+  geom_histogram()
+```
+
+```{r}
+df.agg2 %>% 
+  ggplot(aes(x = log(rt))) +
+  geom_histogram()
+```
+
+### the hist plot for unaggregated data
+
+```{r}
+df.unagg1 %>% 
+  ggplot(aes(x = rt)) + 
+  geom_histogram()
+```
+
+```{r}
+df.unagg1 %>% 
+  ggplot(aes(x = log(rt))) + 
+  geom_histogram()
+```
+
+
+
+```{r}
+df.unagg2 %>% 
+  ggplot(aes(x = rt)) + 
+  geom_histogram()
+```
+```{r}
+df.unagg2 %>% 
+  ggplot(aes(x = log(rt))) + 
+  geom_histogram()
+```
+### Apply log transform to the aggregated data
+
+apply log transform to the aggregated data before entering to the  Bayesfactor package
+```{r}
+df.agg1 <- df.agg1 %>% 
+  dplyr::mutate(log_rt = log(rt))
+```
+
+
+```{r}
+df.agg2 <- df.agg2 %>% 
+  dplyr::mutate(log_rt = log(rt))
+```
+
+
+
+## Calculate BF value by RMANOVA and HLM
+
+### Using aggregated data and RMANOVA to calculate BF
+```{r}
+df.agg1$subj_idx <- as.factor(df.agg1$subj_idx)
+subjects1 <- sort(unique(df.agg1$subj_idx))
+subjects1
+
+stages <- seq(20, 30, by = 10)
+
+stage_n1 = 0
+
+bfdf1 <- data.frame(effect = NA, N = NA, BF = NA, stage = NA, upper_threshold = NA, lower_threshold = NA)
+
+for (i in stages) {
+  data1 <- subset(df.agg1, subj_idx %in% head(subjects1, i))
+  
+  stage_n1 = stage_n1 + 1
+  
+  message(length(unique(data1$subj_idx)), " subjects")
+  
+  message("The data collection stage is ", stage_n1)
+  
+  data1$subj_idx <- as.factor(data1$subj_idx)
+  
+  bayesfactors1 <- BayesFactor::generalTestBF(
+   log_rt ~ valence * matchness * seq * subj_idx - subj_idx:valence:matchness:seq,
+     data = data.frame(data1),
+     whichRandom = "subj_idx",
+     neverExclude = "subj_idx",
+     whichModels = "top"
+  )
+
+  summary(bayesfactors1)
+
+  df_output1 <- as.data.frame(bayesfactors1)
+
+
+  bf_3wayinx1 <- data.frame(effect = "matchness:sequence:valence", N = i,
+                           BF = 1/df_output1[1, 1], stage = stage_n1,
+                           upper_threshold = 10, lower_threshold = 1/10)
+
+
+  bf_msinx1 <- data.frame(effect = "matchness:sequence", N = i,
+                         BF = 1/df_output1[2, 1], stage = stage_n1,
+                         upper_threshold = 6, lower_threshold = 1/6)
+
+
+  bf_svinx1 <- data.frame(effect = "sequence:valence", N = i,
+                         BF = 1/df_output1[3, 1], stage = stage_n1,
+                         upper_threshold = 6, lower_threshold = 1/6)
+
+
+  bf_mvinx1 <- data.frame(effect = "matchness:valence", N = i,
+                         BF = 1/df_output1[4, 1], stage = stage_n1,
+                         upper_threshold = 6, lower_threshold = 1/6)
+
+
+  bf_smain1 <- data.frame(effect = "sequence", N = i,
+                         BF = 1/df_output1[5, 1], stage = stage_n1,
+                         upper_threshold = 10, lower_threshold = 1/10)
+
+
+  bfdf1 <- rbind(bfdf1, bf_3wayinx1, bf_msinx1, bf_svinx1, bf_mvinx1, bf_smain1)
+  
+}
+
+
+```
+
+```{r}
+
+bfdf1 <- na.omit(bfdf1)
+
+bfdf1$stage <- as.factor(bfdf1$stage)
+
+bfdf1 %>% 
+  ggplot(aes(x = N, y = log(BF))) + 
+  geom_point(aes(color = factor(stage))) + 
+  geom_line() + 
+  scale_x_continuous(limits = c(20, 30), breaks = c(20, 30))+
+  facet_wrap(~effect, scales = "free_y") + 
+  geom_hline(aes(yintercept = log(upper_threshold)), linetype=2) + 
+  geom_hline(aes(yintercept = log(lower_threshold)), linetype=2) 
+```
+
+
+```{r}
+df.agg2$subj_idx <- as.factor(df.agg2$subj_idx)
+subjects2 <- sort(unique(df.agg2$subj_idx))
+subjects2
+
+stages <- seq(20, 30, by = 10)
+
+stage_n2 = 0
+
+bfdf2 <- data.frame(effect = NA, N = NA, BF = NA, stage = NA, upper_threshold = NA, lower_threshold = NA)
+
+for (i in stages) {
+  data2 <- subset(df.agg2, subj_idx %in% head(subjects2, i))
+  
+  data2$subj_idx <- as.factor(data2$subj_idx)
+    
+  stage_n2 = stage_n2 + 1
+  
+  message(length(unique(data2$subj_idx)), " subjects")
+  
+  message("The data collection stage is ", stage_n2)
+  
+  bayesfactors2 <- BayesFactor::generalTestBF(
+   log_rt ~ valence * matchness * seq * subj_idx - subj_idx:valence:matchness:seq,
+     data = data.frame(data2),
+     whichRandom = "subj_idx",
+     neverExclude = "subj_idx",
+     whichModels = "top"
+  )
+  
+  summary(bayesfactors2)
+  
+  df_output2 <- as.data.frame(bayesfactors2)
+
+
+  bf_3wayinx2 <- data.frame(effect = "matchness:sequence:valence", N = i,
+                           BF = 1/df_output2[1, 1], stage = stage_n2, 
+                           upper_threshold = 10, lower_threshold = 1/10)
+
+  
+  bf_msinx2 <- data.frame(effect = "matchness:sequence", N = i, 
+                         BF = 1/df_output2[2, 1], stage = stage_n2, 
+                         upper_threshold = 6, lower_threshold = 1/6)
+
+  
+  bf_svinx2 <- data.frame(effect = "sequence:valence", N = i, 
+                         BF = 1/df_output2[3, 1], stage = stage_n2, 
+                         upper_threshold = 6, lower_threshold = 1/6)
+
+  
+  bf_mvinx2 <- data.frame(effect = "matchness:valence", N = i, 
+                         BF = 1/df_output2[4, 1], stage = stage_n2, 
+                         upper_threshold = 6, lower_threshold = 1/6)
+
+  
+  bf_smain2 <- data.frame(effect = "sequence", N = i, 
+                         BF = 1/df_output2[5, 1], stage = stage_n2, 
+                         upper_threshold = 10, lower_threshold = 1/10)
+
+  
+  bfdf2 <- rbind(bfdf2, bf_3wayinx2, bf_msinx2, bf_svinx2, bf_mvinx2, bf_smain2)
+  
+}
+
+
+```
+
+```{r}
+
+bfdf2 <- na.omit(bfdf2)
+
+bfdf2$stage <- as.factor(bfdf2$stage)
+
+bfdf2 %>% 
+  ggplot(aes(x = N, y = log(BF))) + 
+  geom_point(aes(color = factor(stage))) + 
+  geom_line() + 
+  scale_x_continuous(limits = c(20, 30), breaks = c(20, 30))+
+  facet_wrap(~effect, scales = "free_y") + 
+  geom_hline(aes(yintercept = log(upper_threshold)), linetype=2) + 
+  geom_hline(aes(yintercept = log(lower_threshold)), linetype=2) 
+```
+
+
+```{r}
+m_inx1 <- brm(rt ~ valence * matchness * seq + (valence * matchness * seq | subj_idx),
+  data = df.unagg1,
+  family = lognormal(),
+  warmup = 2000, iter = 25000, chains = 4,
+  control = list(
+    adapt_delta = .99,
+    max_treedepth = 12
+  ),
+  save_pars = save_pars(all = TRUE),
+  file = "maximal_model_exp1_log25000iter"
+)
+```
+
+
+```{r}
+m_exin1 <- brm(rt ~ valence + matchness + seq + valence:matchness + valence:seq + matchness:seq + (valence * matchness * seq | subj_idx),
+  data = df.unagg1,
+  family = lognormal(),
+  warmup = 2000, iter = 25000, chains = 4,
+  control = list(adapt_delta = .99, max_treedepth = 12),
+  save_pars = save_pars(all = TRUE),
+  file = "exinx_model_exp1_log25000iter"
+)
+```
+```{r}
+rbind(df.agg1, )
+```
+
+
+
+
+
+```{r}
+m_inx2 <- brm(rt ~ valence * matchness * seq + (valence * matchness * seq | subj_idx),
+  data = df.unagg2,
+  family = lognormal(),
+  warmup = 2000, iter = 25000, chains = 4,
+  control = list(
+    adapt_delta = .99,
+    max_treedepth = 12
+  ),
+  save_pars = save_pars(all = TRUE),
+  file = "maximal_model_exp2_log25000iter"
+)
+```
+
+```{r}
+fixef(m_inx2)
+```
+
+
+
+```{r}
+m_exin2 <- brm(rt ~ valence + matchness + seq + valence:matchness + valence:seq + matchness:seq + (valence * matchness * seq | subj_idx),
+  data = df.unagg2,
+  family = lognormal(),
+  warmup = 2000, iter = 25000, chains = 4,
+  control = list(adapt_delta = .99, max_treedepth = 12),
+  save_pars = save_pars(all = TRUE),
+  file = "exinx_model_exp2_log25000iter"
+)
+```
+
+```{r}
+fixef(m_exin2)
+```
+
+```{r}
+m_inx1 <-  readRDS(here("2_Analysis", "2_Result",  "maximal_model_exp1_log25000iter.rds"))
+m_exin1 <- readRDS(here("2_Analysis", "2_Result",  "exinx_model_exp1_log25000iter.rds"))
+```
+
+
+```{r}
+m_inx2 <-  readRDS(here("2_Analysis", "2_Result",  "maximal_model_exp2_log25000iter.rds"))
+m_exin2 <- readRDS(here("2_Analysis", "2_Result",  "exinx_model_exp2_log25000iter.rds"))
+```
+
+```{r}
+BF_inx1_1 <- bridgesampling::bridge_sampler(m_inx1, silent = T)
+BF_exin1_0 <- bridgesampling::bridge_sampler(m_exin1, silent = T)
+```
+
+```{r}
+BF_inx2_1 <- bridgesampling::bridge_sampler(m_inx2, silent = T)
+BF_exin2_0 <- bridgesampling::bridge_sampler(m_exin2, silent = T)
+```
+
+
+```{r}
+bf_inx1 <- bridgesampling::bayes_factor(BF_inx1_1, BF_exin1_0)
+bf_inx2 <- bridgesampling::bayes_factor(BF_inx2_1, BF_exin2_0)
+```
+
+```{r}
+bf_inx1
+```
+```{r}
+bf_inx2
+```
+
+
+
+
+
+
+
+
+
+
+
