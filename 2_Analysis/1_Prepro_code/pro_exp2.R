@@ -4,7 +4,7 @@ library(tidyverse)
 library(jsonlite)
 
 here::here()
-path2 <- here::here("1_Data", "1_Raw_data", "1_exp2_data")
+path2 <- here::here("1_Data", "1_Raw_data", "2_exp2_data")
 filenames <- list.files(path2, pattern = "csv", full.names = TRUE)
 
 data <- list()

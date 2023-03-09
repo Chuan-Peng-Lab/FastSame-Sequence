@@ -87,7 +87,7 @@ df.agg2$subj_idx <- as.factor(df.agg2$subj_idx)
 head(df.agg2)
 ```
 
-transform the long data to wide for analysing data in JASP
+Transform the long data to wide for analysing data in JASP
 ```{r}
 df.agg1_wide <- df.agg1 %>%
   tidyr::pivot_wider(
@@ -207,26 +207,27 @@ df.agg2 <- df.agg2 %>%
 ```{r}
 df.agg1$subj_idx <- as.factor(df.agg1$subj_idx)
 
-subjects1 <- sort(unique(df.agg1$subj_idx))
+subjects1 <- sort(unique(df.agg1$subj_idx))#sort by subjects' id
 
 subjects1
 
-stages <- seq(20, 30, by = 10)
+stages <- seq(20, 30, by = 10)#In the first stage we collected 20 subjects, and the second stage we collected 10 subjects
 
-stage_n1 = 0
+stage_n1 = 0# setting for count the loop times
 
-bfdf1 <- data.frame(effect = NA, N = NA, BF = NA, stage = NA, upper_threshold = NA, lower_threshold = NA)
+bfdf1 <- data.frame(effect = NA, N = NA, BF = NA, stage = NA, upper_threshold = NA, lower_threshold = NA)# initial a dataframe to store results
 
 for (i in stages) {
+  #selected the data by subjects in each stage
   data1 <- subset(df.agg1, subj_idx %in% head(subjects1, i))
   
-  stage_n1 = stage_n1 + 1
+  stage_n1 = stage_n1 + 1# starting to add the loop times
   
   message(length(unique(data1$subj_idx)), " subjects")
   
   message("The data collection stage is ", stage_n1)
   
-  data1$subj_idx <- as.factor(data1$subj_idx)
+  data1$subj_idx <- as.factor(data1$subj_idx)# to factor
   
   bayesfactors1 <- BayesFactor::generalTestBF(
    log_rt ~ valence * matchness * seq * subj_idx - subj_idx:valence:matchness:seq,
@@ -238,14 +239,14 @@ for (i in stages) {
 
   summary(bayesfactors1)
 
-  df_output1 <- as.data.frame(bayesfactors1)
+  df_output1 <- as.data.frame(bayesfactors1)# restore the information of result
 
-
+# setting the matchness:sequence:valence effect threshold of the BF to 10,1/10
   bf_3wayinx1 <- data.frame(effect = "matchness:sequence:valence", N = i,
                            BF = 1/df_output1[1, 1], stage = stage_n1,
                            upper_threshold = 10, lower_threshold = 1/10)
 
-
+# setting the matchness:sequence:valence effect threshold of the BF to 6,1/6
   bf_msinx1 <- data.frame(effect = "matchness:sequence", N = i,
                          BF = 1/df_output1[2, 1], stage = stage_n1,
                          upper_threshold = 6, lower_threshold = 1/6)
@@ -260,7 +261,7 @@ for (i in stages) {
                          BF = 1/df_output1[4, 1], stage = stage_n1,
                          upper_threshold = 6, lower_threshold = 1/6)
 
-
+#setting the BF threshold of main effect of sequence to 10,1/10
   bf_smain1 <- data.frame(effect = "sequence", N = i,
                          BF = 1/df_output1[5, 1], stage = stage_n1,
                          upper_threshold = 10, lower_threshold = 1/10)
