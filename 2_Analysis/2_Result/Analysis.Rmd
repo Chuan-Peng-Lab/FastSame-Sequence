@@ -8,6 +8,10 @@ output: html_document
 ## Import packages and data
 
 ```{r import packages and info, message=FALSE}
+options(scipen = 999) # force R to output in decimal instead of scientifc notion
+options(digits = 5) # limit the number of reporting
+# rm(list = setdiff(ls(), lsf.str()))  # remove all data but keep functions
+rm(list = ls())
 library(tidyverse) # data wrangling, plotting
 library(brms) # Bayesian analysis
 library(rstan) # Bayesian analysis
@@ -85,31 +89,6 @@ df.agg2 <- df.agg2 %>%
   dplyr::mutate(exp = "exp2")
 df.agg2$subj_idx <- as.factor(df.agg2$subj_idx)
 head(df.agg2)
-```
-
-Transform the long data to wide for analysing data in JASP
-```{r}
-df.agg1_wide <- df.agg1 %>%
-  tidyr::pivot_wider(
-    id_cols = "subj_idx",
-    names_from = c(
-      valence, matchness,
-      seq
-    ),
-    values_from = rt
-  )
-df.agg2_wide <- df.agg2 %>%
-  tidyr::pivot_wider(
-    id_cols = "subj_idx",
-    names_from = c(
-      valence, matchness,
-      seq
-    ),
-    values_from = rt
-  )
-outpath_v <- here::here("1_Data", "2_Postpro_data")
-# readr::write_csv(df.agg2_wide, paste(outpath_v, "Exp2_RT_agg_wide.csv", sep = "/"))
-# readr::write_csv(df.agg1_wide, paste(outpath_v, "Exp1_RT_agg_wide.csv", sep = "/"))
 ```
 
 #### unaggregated data
@@ -200,6 +179,31 @@ df.agg2 <- df.agg2 %>%
 ```
 
 
+Transform the long data to wide for analysing data in JASP
+```{r}
+df.agg1_wide <- df.agg1 %>%
+  tidyr::pivot_wider(
+    id_cols = "subj_idx",
+    names_from = c(
+      valence, matchness,
+      seq
+    ),
+    values_from = log_rt
+  )
+df.agg2_wide <- df.agg2 %>%
+  tidyr::pivot_wider(
+    id_cols = "subj_idx",
+    names_from = c(
+      valence, matchness,
+      seq
+    ),
+    values_from = log_rt
+  )
+outpath_v <- here::here("1_Data", "2_Postpro_data")
+# readr::write_csv(df.agg2_wide, paste(outpath_v, "Exp2_RT_agg_wide.csv", sep = "/"))
+# readr::write_csv(df.agg1_wide, paste(outpath_v, "Exp1_RT_agg_wide.csv", sep = "/"))
+```
+
 
 ## Calculate BF value by RMANOVA and HLM
 
@@ -211,7 +215,7 @@ subjects1 <- sort(unique(df.agg1$subj_idx))#sort by subjects' id
 
 subjects1
 
-stages <- seq(20, 30, by = 10)#In the first stage we collected 20 subjects, and the second stage we collected 10 subjects
+stages <- c(seq(20, 30, by = 10), 36)#In the first stage we collected 20 subjects, and the second stage we collected 10 subjects
 
 stage_n1 = 0# setting for count the loop times
 
@@ -286,7 +290,7 @@ bfdf1 %>%
   ggplot(aes(x = N, y = log(BF))) + 
   geom_point(aes(color = factor(stage))) + 
   geom_line() + 
-  scale_x_continuous(limits = c(20, 30), breaks = c(20, 30))+
+  scale_x_continuous(limits = c(20, 36), breaks = c(20, 30, 36)) + 
   facet_wrap(~effect, scales = "free_y") + 
   geom_hline(aes(yintercept = log(upper_threshold)), linetype=2) + 
   geom_hline(aes(yintercept = log(lower_threshold)), linetype=2) 
@@ -300,7 +304,7 @@ subjects2 <- sort(unique(df.agg2$subj_idx))
 
 subjects2
 
-stages <- seq(20, 30, by = 10)
+stages <- c(seq(20, 30, by = 10))
 
 stage_n2 = 0
 
