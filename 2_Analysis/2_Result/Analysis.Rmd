@@ -215,7 +215,7 @@ subjects1 <- sort(unique(df.agg1$subj_idx))#sort by subjects' id
 
 subjects1
 
-stages <- c(seq(20, 30, by = 10), 36)#In the first stage we collected 20 subjects, and the second stage we collected 10 subjects
+stages <- c(seq(20, 40, by = 10))#In the first stage we collected 20 subjects, and the second stage we collected 10 subjects
 
 stage_n1 = 0# setting for count the loop times
 
@@ -290,7 +290,7 @@ bfdf1 %>%
   ggplot(aes(x = N, y = log(BF))) + 
   geom_point(aes(color = factor(stage))) + 
   geom_line() + 
-  scale_x_continuous(limits = c(20, 36), breaks = c(20, 30, 36)) + 
+  scale_x_continuous(limits = c(20, 40), breaks = c(20, 30, 40)) + 
   facet_wrap(~effect, scales = "free_y") + 
   geom_hline(aes(yintercept = log(upper_threshold)), linetype=2) + 
   geom_hline(aes(yintercept = log(lower_threshold)), linetype=2) 
@@ -304,7 +304,7 @@ subjects2 <- sort(unique(df.agg2$subj_idx))
 
 subjects2
 
-stages <- c(seq(20, 30, by = 10))
+stages <- c(seq(20, 30, by = 10), 36)
 
 stage_n2 = 0
 
@@ -378,7 +378,7 @@ bfdf2 %>%
   ggplot(aes(x = N, y = log(BF))) + 
   geom_point(aes(color = factor(stage))) + 
   geom_line() + 
-  scale_x_continuous(limits = c(20, 30), breaks = c(20, 30))+
+  scale_x_continuous(limits = c(20, 36), breaks = c(20, 30, 36))+
   facet_wrap(~effect, scales = "free_y") + 
   geom_hline(aes(yintercept = log(upper_threshold)), linetype=2) + 
   geom_hline(aes(yintercept = log(lower_threshold)), linetype=2) 

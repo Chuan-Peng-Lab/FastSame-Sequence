@@ -151,3 +151,7 @@ ggplot(data = df.agg1, aes(y = rt_m)) +
   scale_fill_manual(values = c("#F8766D", "#00BA38", "#619CFF"), labels = c("Circle", "Triangle", "Square")) +
   scale_color_manual(values = c("#F8766D", "#00BA38", "#619CFF"), labels = c("Circle", "Triangle", "Square"))
 ggsave("matchness_axis1.pdf", width = 15, height = 7, dpi = 300)
+
+
+
+
