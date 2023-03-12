@@ -8,10 +8,10 @@ output: html_document
 ## Import packages and data
 
 ```{r import packages and info, message=FALSE}
+rm(list = ls())
 options(scipen = 999) # force R to output in decimal instead of scientifc notion
 options(digits = 5) # limit the number of reporting
 # rm(list = setdiff(ls(), lsf.str()))  # remove all data but keep functions
-rm(list = ls())
 library(tidyverse) # data wrangling, plotting
 library(brms) # Bayesian analysis
 library(rstan) # Bayesian analysis
@@ -304,7 +304,7 @@ subjects2 <- sort(unique(df.agg2$subj_idx))
 
 subjects2
 
-stages <- c(seq(20, 30, by = 10), 36)
+stages <- c(seq(20, 40, by = 10))
 
 stage_n2 = 0
 
@@ -378,7 +378,7 @@ bfdf2 %>%
   ggplot(aes(x = N, y = log(BF))) + 
   geom_point(aes(color = factor(stage))) + 
   geom_line() + 
-  scale_x_continuous(limits = c(20, 36), breaks = c(20, 30, 36))+
+  scale_x_continuous(limits = c(20, 40), breaks = c(20, 30, 40))+
   facet_wrap(~effect, scales = "free_y") + 
   geom_hline(aes(yintercept = log(upper_threshold)), linetype=2) + 
   geom_hline(aes(yintercept = log(lower_threshold)), linetype=2) 
@@ -386,107 +386,29 @@ bfdf2 %>%
 
 
 ```{r}
-m_inx1 <- brm(rt ~ valence * matchness * seq + (valence * matchness * seq | subj_idx),
+m1 <- brm(rt ~ valence * matchness * seq + (valence * matchness * seq | subj_idx),
   data = df.unagg1,
   family = lognormal(),
-  warmup = 2000, iter = 25000, chains = 4,
-  control = list(
-    adapt_delta = .99,
-    max_treedepth = 12
-  ),
-  save_pars = save_pars(all = TRUE),
-  file = "maximal_model_exp1_log25000iter"
+  file = "maximal_model_exp1_log"
 )
 ```
 
-
 ```{r}
-m_exin1 <- brm(rt ~ valence + matchness + seq + valence:matchness + valence:seq + matchness:seq + (valence * matchness * seq | subj_idx),
-  data = df.unagg1,
-  family = lognormal(),
-  warmup = 2000, iter = 25000, chains = 4,
-  control = list(adapt_delta = .99, max_treedepth = 12),
-  save_pars = save_pars(all = TRUE),
-  file = "exinx_model_exp1_log25000iter"
-)
-```
-```{r}
-rbind(df.agg1, )
+fixef(m1)
 ```
 
 
-
-
-
 ```{r}
-m_inx2 <- brm(rt ~ valence * matchness * seq + (valence * matchness * seq | subj_idx),
+m2 <- brm(rt ~ valence * matchness * seq + (valence * matchness * seq | subj_idx),
   data = df.unagg2,
   family = lognormal(),
-  warmup = 2000, iter = 25000, chains = 4,
-  control = list(
-    adapt_delta = .99,
-    max_treedepth = 12
-  ),
-  save_pars = save_pars(all = TRUE),
-  file = "maximal_model_exp2_log25000iter"
+  file = "maximal_model_exp2_log"
 )
 ```
 
 ```{r}
-fixef(m_inx2)
+fixef(m2)
 ```
-
-
-
-```{r}
-m_exin2 <- brm(rt ~ valence + matchness + seq + valence:matchness + valence:seq + matchness:seq + (valence * matchness * seq | subj_idx),
-  data = df.unagg2,
-  family = lognormal(),
-  warmup = 2000, iter = 25000, chains = 4,
-  control = list(adapt_delta = .99, max_treedepth = 12),
-  save_pars = save_pars(all = TRUE),
-  file = "exinx_model_exp2_log25000iter"
-)
-```
-
-```{r}
-fixef(m_exin2)
-```
-
-```{r}
-m_inx1 <-  readRDS(here("2_Analysis", "2_Result",  "maximal_model_exp1_log25000iter.rds"))
-m_exin1 <- readRDS(here("2_Analysis", "2_Result",  "exinx_model_exp1_log25000iter.rds"))
-```
-
-
-```{r}
-m_inx2 <-  readRDS(here("2_Analysis", "2_Result",  "maximal_model_exp2_log25000iter.rds"))
-m_exin2 <- readRDS(here("2_Analysis", "2_Result",  "exinx_model_exp2_log25000iter.rds"))
-```
-
-```{r}
-BF_inx1_1 <- bridgesampling::bridge_sampler(m_inx1, silent = T)
-BF_exin1_0 <- bridgesampling::bridge_sampler(m_exin1, silent = T)
-```
-
-```{r}
-BF_inx2_1 <- bridgesampling::bridge_sampler(m_inx2, silent = T)
-BF_exin2_0 <- bridgesampling::bridge_sampler(m_exin2, silent = T)
-```
-
-
-```{r}
-bf_inx1 <- bridgesampling::bayes_factor(BF_inx1_1, BF_exin1_0)
-bf_inx2 <- bridgesampling::bayes_factor(BF_inx2_1, BF_exin2_0)
-```
-
-```{r}
-bf_inx1
-```
-```{r}
-bf_inx2
-```
-
 
 
 
