@@ -242,6 +242,8 @@ for (i in stages) {
   )
 
   summary(bayesfactors1)
+  
+  gc()
 
   df_output1 <- as.data.frame(bayesfactors1)# restore the information of result
 
@@ -331,6 +333,8 @@ for (i in stages) {
   
   summary(bayesfactors2)
   
+  gc()
+  
   df_output2 <- as.data.frame(bayesfactors2)
 
 
@@ -412,10 +416,60 @@ fixef(m2)
 
 
 
+```{r}
+m1_8t <- brm(rt ~ valence * matchness * seq + (valence * matchness * seq | subj_idx),
+  data = df.unagg1,
+  family = lognormal(),
+  chains = 4,
+  iter   = 8000,
+  warmup = 2000,
+  control = list(adapt_delta = .99, max_treedepth = 12),
+  save_all_pars = TRUE,
+  file = "max_model_exp1_log_8t"
+)
+```
+
+```{r}
+m2_8t <- brm(rt ~ valence * matchness * seq + (valence * matchness * seq | subj_idx),
+  data = df.unagg2,
+  family = lognormal(),
+  chains = 4,
+  iter   = 8000,
+  warmup = 2000,
+  control = list(adapt_delta = .99, max_treedepth = 12),
+  save_all_pars = TRUE,
+  file = "max_model_exp2_log_8t"
+)
+```
 
 
+```{r}
+#this is the model with varying intercept of shape
+m1_vs <- brm(rt ~ valence * matchness * seq + (valence * matchness * seq | subj_idx) + (1 | shape_en),
+  data = df.unagg1,
+  family = lognormal(),
+  chains = 4,
+  iter   = 8000,
+  warmup = 2000,
+  control = list(adapt_delta = .99, max_treedepth = 12),
+  save_all_pars = TRUE,
+  file = "model_vs_exp1_log"
+)
+```
 
-
+```{r}
+#this is the model with varying intercept of shape
+m2_vs <- brm(rt ~ valence * matchness * seq + (valence * matchness * seq | subj_idx) + (1 | shape_en),
+  data = df.unagg2,
+  family = lognormal(),
+  chains = 4,
+  iter   = 8000,
+  warmup = 2000,
+  control = list(adapt_delta = .99, max_treedepth = 12),
+  save_all_pars = TRUE,
+  file = "model_vs_exp2_log"
+)
+```
 
 
 
