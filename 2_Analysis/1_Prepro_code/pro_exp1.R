@@ -25,7 +25,7 @@ for (i in seq_along(filenames)) {
       key_press, condition, correct_response, correct, word, Image
     ) %>%
     dplyr::filter(trial_type == "psychophysics")
-
+  data[[i]]$subj_idx <- as.numeric(data[[i]]$subj_idx)
   data[[i]] <- data[[i]] %>%
     dplyr::filter(trial_type == "psychophysics") %>%
     dplyr::mutate(
@@ -38,10 +38,10 @@ for (i in seq_along(filenames)) {
     ) %>%
     dplyr::mutate(
       valence = case_when(
-        word == "方形" ~ "square",
+        shape_en == "square" ~ "square",
         ### 这里不同实验需修改label的命名
-        word == "圆形" ~ "circle",
-        word == "三角" ~ "triangle"
+        shape_en == "circle" ~ "circle",
+        shape_en == "triangle" ~ "triangle"
       )
     ) %>%
     dplyr::mutate(

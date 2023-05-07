@@ -288,14 +288,17 @@ readr::write_csv(bfdf1, paste(here::here("2_Analysis", "2_Result"), "BF_exp1.csv
 
 bfdf1$stage <- as.factor(bfdf1$stage)
 
-bfdf1 %>% 
+bfdf1_plot <- bfdf1 %>% 
   ggplot(aes(x = N, y = log(BF))) + 
   geom_point(aes(color = factor(stage))) + 
   geom_line() + 
   scale_x_continuous(limits = c(20, 40), breaks = c(20, 30, 40)) + 
   facet_wrap(~effect, scales = "free_y") + 
   geom_hline(aes(yintercept = log(upper_threshold)), linetype=2) + 
-  geom_hline(aes(yintercept = log(lower_threshold)), linetype=2) 
+  geom_hline(aes(yintercept = log(lower_threshold)), linetype=2)
+
+ggsave(filename = "BF_exp1.png",plot = bfdf1_plot, path = here::here("2_Analysis", "2_Result"))
+bfdf1_plot
 ```
 
 
@@ -378,7 +381,7 @@ readr::write_csv(bfdf2, paste(here::here("2_Analysis", "2_Result"), "BF_exp2.csv
 
 bfdf2$stage <- as.factor(bfdf2$stage)
 
-bfdf2 %>% 
+bfdf2_plot <- bfdf2 %>% 
   ggplot(aes(x = N, y = log(BF))) + 
   geom_point(aes(color = factor(stage))) + 
   geom_line() + 
@@ -386,89 +389,91 @@ bfdf2 %>%
   facet_wrap(~effect, scales = "free_y") + 
   geom_hline(aes(yintercept = log(upper_threshold)), linetype=2) + 
   geom_hline(aes(yintercept = log(lower_threshold)), linetype=2) 
+ggsave(filename = "BF_exp2.png",plot = bfdf2_plot, path = here::here("2_Analysis", "2_Result"))
+bfdf2_plot
 ```
 
 
 ```{r}
-m1 <- brm(rt ~ valence * matchness * seq + (valence * matchness * seq | subj_idx),
-  data = df.unagg1,
-  family = lognormal(),
-  file = "maximal_model_exp1_log"
-)
+# m1 <- brm(rt ~ valence * matchness * seq + (valence * matchness * seq | subj_idx),
+#   data = df.unagg1,
+#   family = lognormal(),
+#   file = "maximal_model_exp1_log"
+# )
 ```
 
 ```{r}
-fixef(m1)
+# fixef(m1)
 ```
 
 
 ```{r}
-m2 <- brm(rt ~ valence * matchness * seq + (valence * matchness * seq | subj_idx),
-  data = df.unagg2,
-  family = lognormal(),
-  file = "maximal_model_exp2_log"
-)
+# m2 <- brm(rt ~ valence * matchness * seq + (valence * matchness * seq | subj_idx),
+#   data = df.unagg2,
+#   family = lognormal(),
+#   file = "maximal_model_exp2_log"
+# )
 ```
 
 ```{r}
-fixef(m2)
+# fixef(m2)
 ```
 
 
 
 ```{r}
-m1_8t <- brm(rt ~ valence * matchness * seq + (valence * matchness * seq | subj_idx),
-  data = df.unagg1,
-  family = lognormal(),
-  chains = 4,
-  iter   = 8000,
-  warmup = 2000,
-  control = list(adapt_delta = .99, max_treedepth = 12),
-  save_all_pars = TRUE,
-  file = "max_model_exp1_log_8t"
-)
+# m1_8t <- brm(rt ~ valence * matchness * seq + (valence * matchness * seq | subj_idx),
+#   data = df.unagg1,
+#   family = lognormal(),
+#   chains = 4,
+#   iter   = 8000,
+#   warmup = 2000,
+#   control = list(adapt_delta = .99, max_treedepth = 12),
+#   save_all_pars = TRUE,
+#   file = "max_model_exp1_log_8t"
+# )
 ```
 
 ```{r}
-m2_8t <- brm(rt ~ valence * matchness * seq + (valence * matchness * seq | subj_idx),
-  data = df.unagg2,
-  family = lognormal(),
-  chains = 4,
-  iter   = 8000,
-  warmup = 2000,
-  control = list(adapt_delta = .99, max_treedepth = 12),
-  save_all_pars = TRUE,
-  file = "max_model_exp2_log_8t"
-)
+# m2_8t <- brm(rt ~ valence * matchness * seq + (valence * matchness * seq | subj_idx),
+#   data = df.unagg2,
+#   family = lognormal(),
+#   chains = 4,
+#   iter   = 8000,
+#   warmup = 2000,
+#   control = list(adapt_delta = .99, max_treedepth = 12),
+#   save_all_pars = TRUE,
+#   file = "max_model_exp2_log_8t"
+# )
 ```
 
 
 ```{r}
 #this is the model with varying intercept of shape
-m1_vs <- brm(rt ~ valence * matchness * seq + (valence * matchness * seq | subj_idx) + (1 | shape_en),
-  data = df.unagg1,
-  family = lognormal(),
-  chains = 4,
-  iter   = 8000,
-  warmup = 2000,
-  control = list(adapt_delta = .99, max_treedepth = 12),
-  save_all_pars = TRUE,
-  file = "model_vs_exp1_log"
-)
+# m1_vs <- brm(rt ~ valence * matchness * seq + (valence * matchness * seq | subj_idx) + (1 | shape_en),
+#   data = df.unagg1,
+#   family = lognormal(),
+#   chains = 4,
+#   iter   = 8000,
+#   warmup = 2000,
+#   control = list(adapt_delta = .99, max_treedepth = 12),
+#   save_all_pars = TRUE,
+#   file = "model_vs_exp1_log"
+# )
 ```
 
 ```{r}
 #this is the model with varying intercept of shape
-m2_vs <- brm(rt ~ valence * matchness * seq + (valence * matchness * seq | subj_idx) + (1 | shape_en),
-  data = df.unagg2,
-  family = lognormal(),
-  chains = 4,
-  iter   = 8000,
-  warmup = 2000,
-  control = list(adapt_delta = .99, max_treedepth = 12),
-  save_all_pars = TRUE,
-  file = "model_vs_exp2_log"
-)
+# m2_vs <- brm(rt ~ valence * matchness * seq + (valence * matchness * seq | subj_idx) + (1 | shape_en),
+#   data = df.unagg2,
+#   family = lognormal(),
+#   chains = 4,
+#   iter   = 8000,
+#   warmup = 2000,
+#   control = list(adapt_delta = .99, max_treedepth = 12),
+#   save_all_pars = TRUE,
+#   file = "model_vs_exp2_log"
+# )
 ```
 
 

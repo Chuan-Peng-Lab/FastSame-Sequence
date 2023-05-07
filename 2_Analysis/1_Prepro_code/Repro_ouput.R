@@ -136,7 +136,8 @@ df.exp1.V.acc <- dat_exp1.V %>%
     N = length(ACC),
     countN = sum(ACC),
     ACC = sum(ACC) / length(ACC)
-  )
+  ) %>% 
+  dplyr::ungroup()
 
 
 df.exp2.V.acc <- dat_exp2.V %>%
@@ -145,7 +146,8 @@ df.exp2.V.acc <- dat_exp2.V %>%
     N = length(ACC),
     countN = sum(ACC),
     ACC = sum(ACC) / length(ACC)
-  )
+  ) %>% 
+  dplyr::ungroup()
 
 ######### write the ACC data to csv
 # readr::write_csv(df.exp1.V.acc, paste(outpath_v, "Exp1_ACC.csv", sep = "/"))
@@ -177,13 +179,15 @@ exp2.V.sdt <- dat_exp2.V %>%
 exp1.V.sdt <- exp1.V.sdt %>%
   dplyr::group_by(subj_idx, valence, condition, sdt) %>%
   dplyr::summarise(N = length(sdt)) %>%
-  dplyr::filter(!is.na(sdt)) # no NAs
+  dplyr::filter(!is.na(sdt)) %>% # no NAs
+  dplyr::ungroup()
 
 
 exp2.V.sdt <- exp2.V.sdt %>%
   dplyr::group_by(subj_idx, valence, condition, sdt) %>%
   dplyr::summarise(N = length(sdt)) %>%
-  dplyr::filter(!is.na(sdt)) # no NAs
+  dplyr::filter(!is.na(sdt)) %>% # no NAs
+  dplyr::ungroup()
 # long format to wide
 exp1.V.sdt_w <- tidyr::pivot_wider(exp1.V.sdt, names_from = sdt, values_from = "N")
 exp1.V.sdt_w <- exp1.V.sdt_w %>%
@@ -282,3 +286,27 @@ df.exp2_RT.subj <- df.exp2_RT %>%
 ######### write the aggregated data to csv
 # readr::write_csv(df.exp1_RT.subj, paste(outpath_v, "Exp1_RT_Agg.csv", sep = "/"))
 # readr::write_csv(df.exp2_RT.subj, paste(outpath_v, "Exp2_RT_Agg.csv", sep = "/"))
+
+
+
+##################################################
+### preparing the data for hddm  ####
+##################################################
+# stimuli coding for matchness, the matchness is match and the ACC is 1 was coded to 1, otherwise 0
+
+dat_hddm_stim_coding1 <- dat_exp1.V %>% 
+  dplyr::mutate(response = if_else((matchness=="match" & ACC==1) | (matchness=="mismatch" & ACC==0), 1, 0)) %>% 
+  dplyr::select(subj_idx, valence, matchness, condition, rt, ACC, response) %>% 
+  dplyr::rename(subj_idx = subj_idx, val = valence, seq = condition, rt = rt) %>% 
+  mutate(rt = rt/1000)
+
+dat_hddm_stim_coding2 <- dat_exp2.V %>% 
+  dplyr::mutate(response = if_else((matchness=="match" & ACC==1) | (matchness=="mismatch" & ACC==0), 1, 0)) %>% 
+  dplyr::select(subj_idx, valence, matchness, condition, rt, ACC, response) %>% 
+  dplyr::rename(subj_idx = subj_idx, val = valence, seq = condition, rt = rt) %>% 
+  mutate(rt = rt/1000)
+
+######### write the hddm data to csv
+# readr::write_csv(dat_hddm_stim_coding1, paste(outpath_v, "Exp1_hddm_MM_a.csv", sep = "/"))
+# readr::write_csv(dat_hddm_stim_coding2, paste(outpath_v, "Exp2_hddm_MM_a.csv", sep = "/"))
+

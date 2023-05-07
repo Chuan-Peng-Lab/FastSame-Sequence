@@ -25,7 +25,7 @@ for (i in seq_along(filenames)) {
       key_press, condition, correct_response, correct, word, Image
     ) %>%
     dplyr::filter(trial_type == "psychophysics")
-
+  data[[i]]$subj_idx <- as.numeric(data[[i]]$subj_idx)
   data[[i]] <- data[[i]] %>%
     dplyr::filter(trial_type == "psychophysics") %>%
     dplyr::mutate(
@@ -38,10 +38,24 @@ for (i in seq_along(filenames)) {
     ) %>%
     dplyr::mutate(
       valence = case_when(
-        word == "好人" ~ "Good",
-        ### 这里不同实验需修改label的命名
-        word == "坏人" ~ "Bad",
-        word == "常人" ~ "Neutral"
+        subj_idx %% 6 == 1 & shape_en == "circle" ~ "Good", 
+        subj_idx %% 6 == 1 & shape_en == "square" ~ "Bad", 
+        subj_idx %% 6 == 1 & shape_en == "triangle" ~ "Neutral", 
+        subj_idx %% 6 == 2 & shape_en == "circle" ~ "Neutral", 
+        subj_idx %% 6 == 2 & shape_en == "square" ~ "Good", 
+        subj_idx %% 6 == 2 & shape_en == "triangle" ~ "Bad", 
+        subj_idx %% 6 == 3 & shape_en == "circle" ~ "Neutral", 
+        subj_idx %% 6 == 3 & shape_en == "square" ~ "Bad", 
+        subj_idx %% 6 == 3 & shape_en == "triangle" ~ "Good", 
+        subj_idx %% 6 == 4 & shape_en == "circle" ~ "Bad", 
+        subj_idx %% 6 == 4 & shape_en == "square" ~ "Good", 
+        subj_idx %% 6 == 4 & shape_en == "triangle" ~ "Neutral", 
+        subj_idx %% 6 == 5 & shape_en == "circle" ~ "Bad", 
+        subj_idx %% 6 == 5 & shape_en == "square" ~ "Neutral", 
+        subj_idx %% 6 == 5 & shape_en == "triangle" ~ "Good", 
+        subj_idx %% 6 == 0 & shape_en == "circle" ~ "Good", 
+        subj_idx %% 6 == 0 & shape_en == "square" ~ "Neutral", 
+        subj_idx %% 6 == 0 & shape_en == "triangle" ~ "Bad"
       )
     ) %>%
     dplyr::mutate(
