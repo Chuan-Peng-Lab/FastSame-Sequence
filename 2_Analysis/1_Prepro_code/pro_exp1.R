@@ -38,10 +38,10 @@ for (i in seq_along(filenames)) {
     ) %>%
     dplyr::mutate(
       valence = case_when(
-        shape_en == "square" ~ "square",
+        word == "方形" ~ "square",
         ### 这里不同实验需修改label的命名
-        shape_en == "circle" ~ "circle",
-        shape_en == "triangle" ~ "triangle"
+        word == "圆形" ~ "circle",
+        word == "三角" ~ "triangle"
       )
     ) %>%
     dplyr::mutate(

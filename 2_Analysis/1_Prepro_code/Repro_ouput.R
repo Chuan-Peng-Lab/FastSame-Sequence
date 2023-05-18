@@ -23,7 +23,7 @@ excldSub1_r1 <- dat_exp1 %>%
   dplyr::group_by(subj_idx, matchness, valence, condition) %>%
   dplyr::summarise(N = length(ACC)) %>% # count the trial # for each condition of each subject
   dplyr::ungroup() %>%
-  dplyr::filter(N != 40) %>% # filter the rows that trial Number is not 75
+  dplyr::filter(N != 40) %>% # filter the rows that trial Number is not 40
   dplyr::distinct(subj_idx) %>% # find the unique subject ID
   dplyr::pull(subj_idx) # pull the subj ID as vector
 
